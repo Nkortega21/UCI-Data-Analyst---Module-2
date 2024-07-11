@@ -1,0 +1,111 @@
+Sub Module_2()
+
+'Change number format
+    Range("G:G").NumberFormat = "0.00E+00"
+    Range("K:K").NumberFormat = "0.00%"
+    Range("Q2,Q3").NumberFormat = "0.00%"
+    
+'Define headers
+    Range("I1").Value = "Ticker"
+    Range("j1").Value = "Quarterly Change"
+    Range("k1").Value = "Percent Change"
+    Range("l1").Value = "Total Stock Volume"
+    Range("p1").Value = "Ticker"
+    Range("q1").Value = "Value"
+
+'Define "Greatest" Columns
+    Range("o2").Value = "Greatest % Increase"
+    Range("o3").Value = "Greatest % Decrease"
+    Range("o4").Value = "Greatest Total Volume"
+
+'Last Row (LR) setup
+    Dim LR As Long
+    LR = Cells(Rows.Count, 1).End(xlUp).Row
+    
+'Ticker, Quarterly Change (QC), Percent Change(PC), and Total Stock Volume(TSV) Setup
+    Dim Ticker As String
+
+    Dim TSV As Single
+    TSV = 0
+
+    Dim Summary As Integer
+    Summary = 2
+
+    Dim QC As Double
+    QC = 0
+
+    Dim Percent As Double
+    Dim PC As Double
+
+
+For I = 2 To LR
+
+'First Value of new ticker
+    Dim FV As Boolean 'FV = First Value
+        If FV = False Then
+    Dim QO As Double 'QO = Quarter Open
+        QO = Cells(I, 3).Value
+            FV = True
+        End If
+
+
+    If Cells(I + 1, 1).Value <> Cells(I, 1).Value Then
+
+'Ticker Column Export
+    Ticker = Cells(I, 1).Value
+        Range("I" & Summary).Value = Ticker
+    
+'Total Stock Volume (TSV) Column Export
+    TSV = TSV + Cells(I, 7).Value
+        Range("L" & Summary).Value = TSV
+    
+'Quarter Change (QC) Column Export
+    QC = Cells(I, 6).Value - QO
+        Range("J" & Summary).Value = QC
+       
+'Percent Change (PC) Column Export
+    PC = (QC / QO)
+        Range("K" & Summary).Value = PC
+    
+'Reset data
+    Summary = Summary + 1
+    TSV = 0
+    FV = False
+
+    Else
+
+    TSV = TSV + Cells(I, 7).Value
+    PC = PC + Percent
+    Percent = 0
+
+    End If
+Next I
+
+'Greatest Stats: Greatest % Increase (GInc), Greatest % Decrease (GDec), Greates Total Stock Volume (GTSV)
+    Dim GInc As Double
+    Dim GDec As Double
+    Dim GTSV As Single
+
+GInc = WorksheetFunction.Max(Range("k2:k" & LR))
+    Range("q2").Value = GInc
+    Range("p2").Formula = "=xlookup(q2,k:k,i:i)"
+GDec = WorksheetFunction.Min(Range("k2:k" & LR))
+    Range("q3").Value = GDec
+    Range("p3").Formula = "=xlookup(q3,k:k,i:i)"
+GTSV = WorksheetFunction.Max(Range("l2:l" & LR))
+    Range("q4").Value = GTSV
+    Range("p4").Formula = "=xlookup(q4,l:l,i:i)"
+
+'Change Conditional Format
+    Range("j2:k" & LR).FormatConditions.Delete
+    With Range("j2:k" & LR).FormatConditions.Add(Type:=xlCellValue, Operator:=xlGreater, Formula1:="0")
+        .Interior.ColorIndex = 4
+    End With
+    With Range("j2:k" & LR).FormatConditions.Add(Type:=xlCellValue, Operator:=xlLess, Formula1:="0")
+        .Interior.ColorIndex = 3
+    End With
+    
+'Resize Columns
+    Cells.Select
+    Selection.Columns.AutoFit
+End Sub
